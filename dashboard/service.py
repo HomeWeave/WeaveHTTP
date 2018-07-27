@@ -13,6 +13,7 @@ class DashboardService(BasePlugin):
     def on_service_start(self, *args, **kwargs):
         self.http.start()
         self.http.register_folder('static')
+        self.notify_start()
         self.exited.wait()
 
     def on_service_stop(self, *args, **kwargs):
