@@ -1,54 +1,19 @@
-function loadSystemCards(data) {
-    var smallCards = [
-        {
-            cardType: 'success',
-            icon: {material: 'build'},
-            title: 'Version',
-            content: data.version,
-            footer: [
-                {
-                    icon: {material: 'build'},
-                    url: "#",
-                    message: "Test"
-                }
-            ]
-        },
-        {
-            cardType: 'warning',
-            icon: {material: 'dns'},
-            title: 'Rules',
-            content: data.rules + " active",
-            footer: []
-        },
-        {
-            cardType: 'info',
-            icon: {material: 'developer_board'},
-            title: 'Plugins',
-            content: data.plugins + " loaded",
-            footer: []
-        },
-    ];
-    var cards = smallCards.forEach(function(data) {
-        return SmallCard('.content .weave-small-cards-row', data);
-    });
-}
-
 function loadComponents(components) {
     components.forEach(function(component) {
-        return MediumCard('.content .weave-medium-cards-row', component);
+        return GenericApplication('.content .weave-small-cards-row', component);
     });
 }
 
 $(document).ready(function() {
     DEBUG_APPS = [];
-    registerComponents();
-    var statusRequest = $.ajax({
-        url: "/api/status",
+    registerComponent('vertical-layout', '#template-vertical-layout');
+    registerComponent('header-3', '#template-h3');
+    registerComponent('paragraph', '#template-paragraph');
+    registerComponent('weave-button', '#template-button');
+    $.ajax({
+        url: "/api/status-cards",
         dataType: "json"
-    });
-
-    $.when(statusRequest).then(function(statusResponse) {
-        loadSystemCards(statusResponse);
-        loadComponents(statusResponse.components);
+    }).then(function(statusResponse) {
+        loadComponents(statusResponse.cards);
     });
 });
