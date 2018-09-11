@@ -51,8 +51,8 @@
         <div class="stats">
             <span v-for="f in data">
                 <weave-icon v-bind:data="f"></weave-icon>
-                <a v-if="f.url" v-bind:href="f.url">{{f.message}}</a>
-                <span v-else>{{f.message}}</span>
+                <a v-if="f.url" v-bind:href="f.url">{{$root.processUITemplate(f.message)}}</a>
+                <span v-else>{{$root.processUITemplate(f.message)}}</span>
             </span>
         </div>
     </script>
