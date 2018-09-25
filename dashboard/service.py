@@ -7,7 +7,7 @@ from weavelib.services import BasePlugin
 class DashboardService(BasePlugin):
     def __init__(self, *args, **kwargs):
         super(DashboardService, self).__init__(*args, **kwargs)
-        self.http = AppHTTPServer(self)
+        self.http = AppHTTPServer(self.conn, self)
         self.exited = Event()
 
     def on_service_start(self, *args, **kwargs):
