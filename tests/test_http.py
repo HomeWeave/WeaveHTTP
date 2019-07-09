@@ -101,6 +101,22 @@ class TestDashboardService(object):
         response = requests.get(url)
         assert response.status_code == 200
 
+    def test_static_root(self):
+        url = "http://localhost:15000/"
+        response1 = requests.get(url)
+
+        url = "http://localhost:15000/static/index.html"
+        response2 = requests.get(url)
+
+        assert response1.status_code == 200
+        assert response1.text == response2.text
+
+    def test_bad_static_file(self):
+        url = "http://localhost:15000/static/bad.html"
+        response = requests.get(url)
+        print(response.text)
+        assert response.status_code == 404
+
     def test_rpc(self):
         url = "http://localhost:15000/rpc/"
         data = {

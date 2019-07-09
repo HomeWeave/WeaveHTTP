@@ -90,8 +90,6 @@ class RPCModule(BaseHTTPModule):
 
 
 class StaticFileModule(BaseHTTPModule):
-    returns_complete_response = True
-
     def __init__(self, service):
         self.base_dir = tempfile.mkdtemp()
         self.rpc = RPCServer("http", "HTTP Registry", [
@@ -142,3 +140,5 @@ class StaticFileModule(BaseHTTPModule):
     def handle_static(self, params, path):
         return static_file(path, root=os.path.join(self.base_dir))
 
+    def transform_response(self, code, result):
+        return result
