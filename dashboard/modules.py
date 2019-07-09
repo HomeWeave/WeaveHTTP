@@ -92,7 +92,7 @@ class RPCModule(BaseHTTPModule):
 class StaticFileModule(BaseHTTPModule):
     def __init__(self, service):
         self.base_dir = tempfile.mkdtemp()
-        self.rpc = RPCServer("http", "HTTP Registry", [
+        self.rpc = RPCServer("static_files", "HTTP Registry", [
                                 ServerAPI("register", "Register a resource.", [
                                     ArgParameter("filename", "File name.", str),
                                     ArgParameter("content", "Base64 content",
@@ -123,8 +123,8 @@ class StaticFileModule(BaseHTTPModule):
         app_id = self.url_to_app_id(app_info["app_url"])
 
         rel_path = os.path.join("apps", app_id, filename.lstrip('/'))
-
         self.write_file(rel_path, decoded)
+        return rel_path
 
     def write_file(self, rel_path, content):
         full_path = os.path.join(self.base_dir, rel_path)

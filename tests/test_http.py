@@ -1,3 +1,4 @@
+import base64
 import os
 import time
 from contextlib import contextmanager
@@ -47,6 +48,15 @@ class DummyService(MessagingEnabled, BaseService):
         raise ObjectNotFound("blah")
 
     def on_service_start(self):
+        dashboard_rpc_info = find_rpc(self, "b", "static_files")
+        client = RPCClient(self.get_connection(), dashboard_rpc_info,
+                           self.get_auth_token())
+        client.start()
+
+        content = base64.b64encode(b"test").decode('ascii')
+        self.static_resource = client["register"]("/a/x", content, _block=True)
+
+        client.stop()
         self.rpc_server.start()
 
     def on_service_stop(self):
@@ -79,15 +89,15 @@ class TestDashboardService(object):
 
         appmgr_client.stop()
 
-        cls.dummy_service = DummyService(cls.conn, dummy_token)
-        cls.dummy_service.service_start()
-        cls.dummy_service.wait_for_start(15)
-
         cls.service = ThreadedDashboardService(auth_token=test_token,
                                                plugin_dir="x", venv_dir="y",
                                                conn=cls.conn, started_token="t")
         cls.service.service_start()
         cls.service.wait_for_start(15)
+
+        cls.dummy_service = DummyService(cls.conn, dummy_token)
+        cls.dummy_service.service_start()
+        cls.dummy_service.wait_for_start(15)
 
     @classmethod
     def teardown_class(cls):
@@ -155,3 +165,10 @@ class TestDashboardService(object):
         assert response.json()["status"] == "error"
         assert "ObjectNotFound" in response.json()["message"]
 
+    def test_plugin_static_resources(self):
+        rel_path = self.dummy_service.static_resource
+        url = "http://localhost:15000/static/" + rel_path
+
+        response = requests.get(url)
+        assert response.status_code == 200
+        assert response.content == b"test"
