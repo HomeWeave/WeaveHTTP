@@ -1,0 +1,17 @@
+language: python
+python:
+  - "3.6"
+
+install:
+  - pip install -r requirements.txt
+
+before_script:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+  - sed -i "s/WeaveServer.git/WeaveServer.git@$TRAVIS_BRANCH/g" dev-requirements.txt
+  - pip install -r dev-requirements.txt
+
+script:
+  - coverage run --source dashboard -m py.test
+
+after_success:
+  - coveralls
