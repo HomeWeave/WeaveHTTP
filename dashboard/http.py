@@ -38,7 +38,7 @@ class WeaveHTTPServer(Bottle):
         self.modules = modules
         for prefix, module in modules:
             for method, path_suffix, callback in module.get_registrations():
-                path = os.path.join(prefix, path_suffix.lstrip("/"))
+                path = os.path.join(prefix, path_suffix)
                 logger.info("Registering: %s at %s", callback, path)
                 func = self.handle_api(module, method, callback)
                 self.route(path, method)(func)

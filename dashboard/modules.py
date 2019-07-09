@@ -59,7 +59,7 @@ class RPCModule(BaseHTTPModule):
                 client.stop()
 
     def get_registrations(self):
-        return [("POST", "/", self.handle_rpc)]
+        return [("POST", "", self.handle_rpc)]
 
     def handle_rpc(self, body):
         app_url = get_required_argument(body, 'app_url')
@@ -112,8 +112,8 @@ class StaticFileModule(BaseHTTPModule):
 
     def get_registrations(self):
         return [
-            ("GET", "/", lambda x: self.handle_static(x, "/static/index.html")),
-            ("GET", "/<path:path>", self.handle_static),
+            ("GET", "/", lambda x: self.handle_static(x, "/index.html")),
+            ("GET", "<path:path>", self.handle_static),
         ]
 
     def url_to_app_id(self, app_url):
