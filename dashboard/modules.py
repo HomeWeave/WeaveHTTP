@@ -33,6 +33,7 @@ def jsonify_response(code, result):
         return json.dumps({"status": "error", "message": result})
     return json.dumps(result)
 
+
 class BaseHTTPModule(object):
     def transform_response(self, code, response):
         response.status = code
@@ -93,12 +94,14 @@ class StaticFileModule(BaseHTTPModule):
     def __init__(self, service):
         self.base_dir = tempfile.mkdtemp()
         self.rpc = RPCServer("static_files", "HTTP Registry", [
-                                ServerAPI("register", "Register a resource.", [
-                                    ArgParameter("filename", "File name.", str),
-                                    ArgParameter("content", "Base64 content",
-                                                 str),
-                                ], self.register),
-                             ], service)
+            ServerAPI("register", "Register a resource.", [
+                ArgParameter("filename", "File name.", str),
+                ArgParameter("content", "Base64 content", str),
+            ], self.register),
+            ServerAPI("unregister", "Unregister a resource", [
+                ArgParameter("filename", "File name", str)
+            ], self.unregister),
+        ], service)
 
     def start(self):
         logger.info("Using base dir for HTTP: %s", self.base_dir)
@@ -126,8 +129,15 @@ class StaticFileModule(BaseHTTPModule):
         self.write_file(rel_path, decoded)
         return rel_path
 
+    def unregister(self, filename):
+        app_info = get_rpc_caller()
+        app_id = self.url_to_app_id(app_info["app_url"])
+        rel_path = os.path.join("apps", app_id, filename.lstrip('/'))
+        full_path = self.get_absolute_path(rel_path)
+        os.unlink(full_path)
+
     def write_file(self, rel_path, content):
-        full_path = os.path.join(self.base_dir, rel_path)
+        full_path = self.get_absolute_path(rel_path)
 
         try:
             os.makedirs(os.path.dirname(full_path))
@@ -136,6 +146,9 @@ class StaticFileModule(BaseHTTPModule):
 
         with open(full_path, "wb") as out:
             out.write(content)
+
+    def get_absolute_path(self, rel_path):
+        return os.path.join(self.base_dir, rel_path)
 
     def handle_static(self, params, path):
         return static_file(path, root=os.path.join(self.base_dir))
