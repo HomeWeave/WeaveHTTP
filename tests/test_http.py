@@ -101,30 +101,14 @@ class TestWeaveHTTPService(object):
 
     @classmethod
     def teardown_class(cls):
-        cls.conn.close()
         cls.service.service_stop()
         cls.dummy_service.service_stop()
+        cls.conn.close()
         cls.messaging_service.service_stop()
-
-    def test_static_files(self):
-        url = "http://localhost:15000/static/index.html"
-        response = requests.get(url)
-        assert response.status_code == 200
-
-    def test_static_root(self):
-        url = "http://localhost:15000/"
-        response1 = requests.get(url)
-
-        url = "http://localhost:15000/static/index.html"
-        response2 = requests.get(url)
-
-        assert response1.status_code == 200
-        assert response1.text == response2.text
 
     def test_bad_static_file(self):
         url = "http://localhost:15000/static/bad.html"
         response = requests.get(url)
-        print(response.text)
         assert response.status_code == 404
 
     def test_rpc(self):
