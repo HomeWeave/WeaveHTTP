@@ -3,12 +3,12 @@ from threading import Event
 
 from weavelib.services import BasePlugin, MessagingEnabled
 
-from dashboard.modules import RPCModule, StaticFileModule
-from dashboard.http import WeaveHTTPServer
+from weavehttp.modules import RPCModule, StaticFileModule
+from weavehttp.http import WeaveHTTPServer
 
-class DashboardService(MessagingEnabled, BasePlugin):
+class WeaveHTTPService(MessagingEnabled, BasePlugin):
     def __init__(self, *args, **kwargs):
-        super(DashboardService, self).__init__(*args, **kwargs)
+        super(WeaveHTTPService, self).__init__(*args, **kwargs)
 
         self.static_module = StaticFileModule(self)
         modules = [

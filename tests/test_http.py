@@ -12,7 +12,7 @@ from weavelib.rpc import find_rpc, ServerAPI, ArgParameter, RPCClient, RPCServer
 from weavelib.services import BackgroundThreadServiceStart, MessagingEnabled
 from weavelib.services import BaseService
 
-from dashboard.service import DashboardService
+from weavehttp.service import WeaveHTTPService
 
 from test_utils import MessagingService, DummyEnvService
 
@@ -20,7 +20,7 @@ from test_utils import MessagingService, DummyEnvService
 MESSAGING_PLUGIN_URL = "https://github.com/HomeWeave/WeaveServer.git"
 
 
-class ThreadedDashboardService(BackgroundThreadServiceStart, DashboardService):
+class ThreadedWeaveHTTPService(BackgroundThreadServiceStart, WeaveHTTPService):
     pass
 
 
@@ -63,7 +63,7 @@ class DummyService(MessagingEnabled, BaseService):
         self.rpc_server.stop()
 
 
-class TestDashboardService(object):
+class TestWeaveHTTPService(object):
     @classmethod
     def setup_class(cls):
         cls.messaging_service = MessagingService()
@@ -89,7 +89,7 @@ class TestDashboardService(object):
 
         appmgr_client.stop()
 
-        cls.service = ThreadedDashboardService(auth_token=test_token,
+        cls.service = ThreadedWeaveHTTPService(auth_token=test_token,
                                                plugin_dir="x", venv_dir="y",
                                                conn=cls.conn, started_token="t")
         cls.service.service_start()

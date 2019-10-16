@@ -13,13 +13,13 @@ class CleanInstall(install):
 
 
 setup(
-    name='dashboard',
+    name='weavehttp',
     version='0.8',
     author='Srivatsan Iyer',
     author_email='supersaiyanmode.rox@gmail.com',
     packages=find_packages(),
     license='MIT',
-    description='Dashboard for HomeWeave',
+    description='HTTP for HomeWeave',
     install_requires=[
         'weavelib',
         'eventlet!=0.22',
