@@ -6,6 +6,7 @@ import os
 import shutil
 import tempfile
 from threading import Lock
+from uuid import uuid4
 
 from bottle import response, static_file
 
@@ -102,6 +103,9 @@ class StaticFileModule(BaseHTTPModule):
                 ArgParameter("filename", "File name", str)
             ], self.unregister),
         ], service)
+        self.pseudo_app_id_map = {}
+        self.pseudo_app_id_map_lock = Lock()
+
 
     def start(self):
         logger.info("Using base dir for HTTP: %s", self.base_dir)
@@ -125,14 +129,16 @@ class StaticFileModule(BaseHTTPModule):
         app_info = get_rpc_caller()
         app_id = self.url_to_app_id(app_info["app_url"])
 
-        rel_path = os.path.join("apps", app_id, filename.lstrip('/'))
+        pseudo_id = self.get_pseudo_app_id(app_id)
+        rel_path = os.path.join("apps", pseudo_id, filename.lstrip('/'))
         self.write_file(rel_path, decoded)
         return rel_path
 
     def unregister(self, filename):
         app_info = get_rpc_caller()
         app_id = self.url_to_app_id(app_info["app_url"])
-        rel_path = os.path.join("apps", app_id, filename.lstrip('/'))
+        pseudo_id = self.get_pseudo_app_id(app_id)
+        rel_path = os.path.join("apps", pseudo_id, filename.lstrip('/'))
         full_path = self.get_absolute_path(rel_path)
         os.unlink(full_path)
 
@@ -155,3 +161,9 @@ class StaticFileModule(BaseHTTPModule):
 
     def transform_response(self, code, result):
         return result
+
+    def get_pseudo_app_id(self, app_id):
+        pseudo_id = str(uuid4())
+        with self.pseudo_app_id_map_lock:
+            self.pseudo_app_id_map[app_id] = pseudo_id
+        return pseudo_id
