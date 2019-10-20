@@ -132,7 +132,8 @@ class StaticFileModule(BaseHTTPModule):
 
         pseudo_id = self.get_pseudo_app_id(app_id)
         rel_path = os.path.join("apps", pseudo_id, filename.lstrip('/'))
-        self.write_file(rel_path, decoded)
+        full_path = self.get_absolute_path(rel_path, filename)
+        self.write_file(full_path, decoded)
         return rel_path
 
     def unregister(self, filename):
@@ -140,12 +141,10 @@ class StaticFileModule(BaseHTTPModule):
         app_id = self.url_to_app_id(app_info["app_url"])
         pseudo_id = self.get_pseudo_app_id(app_id)
         rel_path = os.path.join("apps", pseudo_id, filename.lstrip('/'))
-        full_path = self.get_absolute_path(rel_path)
-        os.unlink(full_path)
+        full_path = self.get_absolute_path(rel_path, filename)
+        shutil.rmtree(full_path)
 
-    def write_file(self, rel_path, content):
-        full_path = self.get_absolute_path(rel_path)
-
+    def write_file(self, full_path, content):
         try:
             os.makedirs(os.path.dirname(full_path))
         except:
@@ -154,8 +153,12 @@ class StaticFileModule(BaseHTTPModule):
         with open(full_path, "wb") as out:
             out.write(content)
 
-    def get_absolute_path(self, rel_path):
-        return os.path.join(self.base_dir, rel_path)
+    def get_absolute_path(self, rel_path, filename):
+        full_path = os.path.join(self.base_dir, rel_path)
+        norm_path = os.path.normpath(full_path)
+        if norm_path.startswith(self.base_dir):
+            return norm_path
+        raise BadArguments(filename)
 
     def handle_static(self, params, path):
         return static_file(path, root=os.path.join(self.base_dir))
