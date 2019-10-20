@@ -142,7 +142,10 @@ class StaticFileModule(BaseHTTPModule):
         pseudo_id = self.get_pseudo_app_id(app_id)
         rel_path = os.path.join("apps", pseudo_id, filename.lstrip('/'))
         full_path = self.get_absolute_path(rel_path, filename)
-        shutil.rmtree(full_path)
+        if os.path.isdir(full_path):
+            shutil.rmtree(full_path)
+        elif os.path.isfile(full_path):
+            os.unlink(full_path)
 
     def write_file(self, full_path, content):
         try:

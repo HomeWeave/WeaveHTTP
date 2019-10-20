@@ -157,6 +157,10 @@ class TestWeaveHTTPService(object):
         assert response.status_code == 200
         assert response.content == b"test"
 
+        self.dummy_service.http_client["unregister"]("/a/x", _block=True)
+        response = requests.get(url)
+        assert response.status_code == 404
+
     def test_unregister_directory(self):
         content = base64.b64encode(b"test").decode('ascii')
         rel_paths = [
