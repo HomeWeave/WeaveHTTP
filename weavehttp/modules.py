@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 import tempfile
+from collections import defaultdict
 from threading import Lock
 from uuid import uuid4
 
@@ -103,7 +104,7 @@ class StaticFileModule(BaseHTTPModule):
                 ArgParameter("filename", "File name", str)
             ], self.unregister),
         ], service)
-        self.pseudo_app_id_map = {}
+        self.pseudo_app_id_map = defaultdict(lambda: str(uuid4()))
         self.pseudo_app_id_map_lock = Lock()
 
 
@@ -163,7 +164,5 @@ class StaticFileModule(BaseHTTPModule):
         return result
 
     def get_pseudo_app_id(self, app_id):
-        pseudo_id = str(uuid4())
         with self.pseudo_app_id_map_lock:
-            self.pseudo_app_id_map[app_id] = pseudo_id
-        return pseudo_id
+            return self.pseudo_app_id_map[app_id]
