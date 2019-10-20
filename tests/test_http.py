@@ -4,9 +4,10 @@ import time
 from contextlib import contextmanager
 from threading import Thread
 
+import pytest
 import requests
 
-from weavelib.exceptions import ObjectNotFound
+from weavelib.exceptions import ObjectNotFound, BadArguments
 from weavelib.messaging import WeaveConnection
 from weavelib.rpc import find_rpc, ServerAPI, ArgParameter, RPCClient, RPCServer
 from weavelib.services import BackgroundThreadServiceStart, MessagingEnabled
@@ -37,6 +38,9 @@ class DummyService(MessagingEnabled, BaseService):
             ServerAPI("exception", "desc1", [], self.exception),
         ]
         self.rpc_server = RPCServer("name", "desc", apis, self)
+        dashboard_rpc_info = find_rpc(self, "b", "static_files")
+        self.http_client = RPCClient(self.get_connection(), dashboard_rpc_info,
+                                     self.get_auth_token())
 
     def number(self, param):
         return param + 1
@@ -48,18 +52,11 @@ class DummyService(MessagingEnabled, BaseService):
         raise ObjectNotFound("blah")
 
     def on_service_start(self):
-        dashboard_rpc_info = find_rpc(self, "b", "static_files")
-        client = RPCClient(self.get_connection(), dashboard_rpc_info,
-                           self.get_auth_token())
-        client.start()
-
-        content = base64.b64encode(b"test").decode('ascii')
-        self.static_resource = client["register"]("/a/x", content, _block=True)
-
-        client.stop()
         self.rpc_server.start()
+        self.http_client.start()
 
     def on_service_stop(self):
+        self.http_client.stop()
         self.rpc_server.stop()
 
 
@@ -150,9 +147,38 @@ class TestWeaveHTTPService(object):
         assert "ObjectNotFound" in response.json()["message"]
 
     def test_plugin_static_resources(self):
-        rel_path = self.dummy_service.static_resource
+        content = base64.b64encode(b"test").decode('ascii')
+        rel_path = self.dummy_service.http_client["register"]("/a/x", content,
+                                                              _block=True)
+
         url = "http://localhost:15000/static/" + rel_path
 
         response = requests.get(url)
         assert response.status_code == 200
         assert response.content == b"test"
+
+    def test_unregister_directory(self):
+        content = base64.b64encode(b"test").decode('ascii')
+        rel_paths = [
+            self.dummy_service.http_client["register"]("/b/" + str(x), content,
+                                                       _block=True)
+            for x in range(5)
+        ]
+
+        for rel_path in rel_paths:
+            url = "http://localhost:15000/static/" + rel_path
+            response = requests.get(url)
+            assert response.status_code == 200
+
+        self.dummy_service.http_client["unregister"]("/b/", _block=True)
+
+        for rel_path in rel_paths:
+            url = "http://localhost:15000/static/" + rel_path
+            response = requests.get(url)
+            assert response.status_code == 404
+
+    def test_register_bad_path(self):
+        content = base64.b64encode(b"test").decode('ascii')
+        with pytest.raises(BadArguments):
+            self.dummy_service.http_client["register"]("../../../../x", content,
+                                                       _block=True)
